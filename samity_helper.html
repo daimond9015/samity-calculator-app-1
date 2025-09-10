@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>সমিতি হিসাবরক্ষক</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        body {
+            font-family: 'Hind Siliguri', sans-serif;
+            background-color: #f0f2f5;
+        }
+        .main-content {
+            transition: margin-left .5s;
+        }
+        /* Simple loading spinner */
+        .loader {
+            border: 5px solid #f3f3f3;
+            border-radius: 50%;
+            border-top: 5px solid rgb(45, 153, 224);
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .bengali-date {
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+
+    <!-- Sidebar -->
+    <div class="fixed top-0 left-0 h-full bg-slate-800 text-white w-64 p-5 transition-transform duration-300 ease-in-out" id="sidebar">
+        <h1 class="text-2xl font-bold mb-8">পারিবারিক বন্ধন</h1>
+        <nav>
+            <ul>
+                <li class="mb-4"><a href="#" class="nav-link text-lg flex items-center p-2 rounded-lg hover:bg-slate-700" data-view="dashboard"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg> ড্যাশবোর্ড</a></li>
+                <li class="mb-4"><a href="#" class="nav-link text-lg flex items-center p-2 rounded-lg hover:bg-slate-700" data-view="members"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M15 21a6 6 0 00-9-5.197M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg> সদস্য তালিকা</a></li>
+                <li class="mb-4"><a href="#" class="nav-link text-lg flex items-center p-2 rounded-lg hover:bg-slate-700" data-view="add-transaction"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> নতুন জমা</a></li>
+                <li class="mb-4"><a href="#" class="nav-link text-lg flex items-center p-2 rounded-lg hover:bg-slate-700" data-view="transactions"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg> জমার তালিকা</a></li>
+            </ul>
+        </nav>
+        <div class="absolute bottom-4">
+             <button id="backup-data" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
+                ডেটা ব্যাকআপ
+             </button>
+             <label for="restore-data" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded cursor-pointer mt-2 block text-center">
+                ডেটা পুনরুদ্ধার
+                <input type="file" id="restore-data" class="hidden" accept=".json">
+             </label>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content ml-64">
+        <header class="bg-white shadow p-4 flex justify-between items-center">
+             <div id="current-date" class="text-gray-700 bengali-date"></div>
+             <h2 class="text-2xl font-bold text-gray-800" id="view-title">ড্যাশবোর্ড</h2>
+        </header>
+
+        <main class="p-6">
+            <!-- Loading Spinner -->
+            <div id="loader-container" class="fixed inset-0 bg-gray-500 bg-opacity-50 flex justify-center items-center z-50 hidden">
+                <div class="loader"></div>
+            </div>
+
+            <!-- Dashboard View -->
+            <div id="dashboard-view" class="view">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div class="bg-white p-6 rounded-xl shadow-lg flex items-center justify-between">
+                        <div>
+                            <p class="text-lg text-gray-500">মোট সদস্য</p>
+                            <h3 class="text-4xl font-bold text-gray-800" id="total-members">0</h3>
+                        </div>
+                         <div class="bg-blue-100 p-4 rounded-full">
+                             <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.653-.122-1.28-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.653.122-1.28.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+                         </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-lg flex items-center justify-between">
+                        <div>
+                            <p class="text-lg text-gray-500">চলতি মাসের জমা</p>
+                            <h3 class="text-4xl font-bold text-gray-800" id="current-month-collection">৳0</h3>
+                        </div>
+                        <div class="bg-green-100 p-4 rounded-full">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-green-500" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h12v10H4v-2a2 2 0 00-2 2v4a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm10 4a1 1 0 100 2h-3a1 1 0 100-2h3z" clip-rule="evenodd" /></svg>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-lg flex items-center justify-between">
+                        <div>
+                            <p class="text-lg text-gray-500">সর্বমোট জমা</p>
+                            <h3 class="text-4xl font-bold text-gray-800" id="total-collection">৳0</h3>
+                        </div>
+                        <div class="bg-purple-100 p-4 rounded-full">
+                             <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-8 bg-white p-6 rounded-xl shadow-lg">
+                    <h3 class="text-xl font-bold text-gray-700 mb-4">মাসিক জমার সংক্ষিপ্ত বিবরণ</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left">
+                            <thead>
+                                <tr class="bg-gray-200">
+                                    <th class="p-3">মাস</th>
+                                    <th class="p-3">বছর</th>
+                                    <th class="p-3 text-right">মোট জমা (৳)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="monthly-summary-table">
+                                <!-- Data will be populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Members View -->
+            <div id="members-view" class="view hidden">
+                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="lg:col-span-1 bg-white p-6 rounded-xl shadow-lg">
+                        <h3 class="text-xl font-bold text-gray-700 mb-4">নতুন সদস্য যোগ করুন</h3>
+                        <form id="add-member-form">
+                            <div class="mb-4">
+                                <label for="member-name" class="block text-gray-700 mb-2">সদস্যের নাম</label>
+                                <input type="text" id="member-name" class="w-full p-2 border rounded-md" required>
+                            </div>
+                            <div class="mb-4">
+                                <label for="member-serial" class="block text-gray-700 mb-2">ক্রমিক নং</label>
+                                <input type="text" id="member-serial" class="w-full p-2 border rounded-md">
+                            </div>
+                            <button type="submit" class="w-full bg-blue-600 text-white p-3 rounded-md hover:bg-blue-700 font-bold">সদস্য যোগ করুন</button>
+                        </form>
+                    </div>
+                    <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-lg">
+                        <h3 class="text-xl font-bold text-gray-700 mb-4">সকল সদস্যের তালিকা</h3>
+                        <div class="overflow-y-auto max-h-96">
+                            <table class="w-full text-left">
+                                <thead>
+                                    <tr class="bg-gray-200">
+                                        <th class="p-3">ক্রমিক নং</th>
+                                        <th class="p-3">নাম</th>
+                                        <th class="p-3 text-center">কার্যক্রম</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="members-table">
+                                    <!-- Data will be populated by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                 </div>
+            </div>
+
+            <!-- Add Transaction View -->
+            <div id="add-transaction-view" class="view hidden">
+                <div class="max-w-2xl mx-auto bg-white p-8 rounded-xl shadow-lg">
+                    <h3 class="text-2xl font-bold text-gray-700 mb-6 text-center">নতুন জমা যোগ করুন</h3>
+                    <form id="add-transaction-form">
+                        <div class="mb-4">
+                            <label for="transaction-member" class="block text-gray-700 mb-2">সদস্য নির্বাচন করুন</label>
+                            <select id="transaction-member" class="w-full p-3 border rounded-md bg-gray-50" required>
+                                <!-- Options will be populated by JS -->
+                            </select>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label for="transaction-month" class="block text-gray-700 mb-2">মাস</label>
+                                <select id="transaction-month" class="w-full p-3 border rounded-md bg-gray-50" required>
+                                    <!-- Month options will be populated by JS -->
+                                </select>
+                            </div>
+                            <div>
+                                <label for="transaction-year" class="block text-gray-700 mb-2">বছর</label>
+                                <input type="number" id="transaction-year" class="w-full p-3 border rounded-md" required>
+                            </div>
+                        </div>
+                        <div class="mb-6">
+                            <label for="transaction-amount" class="block text-gray-700 mb-2">টাকার পরিমাণ</label>
+                            <input type="number" id="transaction-amount" class="w-full p-3 border rounded-md" min="0" required>
+                        </div>
+                        <button type="submit" class="w-full bg-green-600 text-white p-3 rounded-md hover:bg-green-700 font-bold text-lg">জমা করুন</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Transactions View -->
+            <div id="transactions-view" class="view hidden">
+                <div class="bg-white p-6 rounded-xl shadow-lg">
+                    <div class="flex flex-wrap justify-between items-center mb-4 gap-4">
+                        <h3 class="text-xl font-bold text-gray-700">সকল জমার তালিকা</h3>
+                        <div class="flex items-center gap-2">
+                            <input type="text" id="search-transaction" placeholder="সদস্যের নাম দিয়ে খুঁজুন..." class="p-2 border rounded-md">
+                            <button id="export-csv" class="bg-teal-500 hover:bg-teal-600 text-white font-bold py-2 px-4 rounded">CSV এক্সপোর্ট</button>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left">
+                            <thead class="bg-gray-200">
+                                <tr>
+                                    <th class="p-3">তারিখ</th>
+                                    <th class="p-3">সদস্যের নাম</th>
+                                    <th class="p-3">মাস</th>
+                                    <th class="p-3">বছর</th>
+                                    <th class="p-3 text-right">টাকা (৳)</th>
+                                    <th class="p-3 text-center">কার্যক্রম</th>
+                                </tr>
+                            </thead>
+                            <tbody id="transactions-table">
+                                <!-- Data will be populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+<!-- Login Screen -->
+<div id="login-screen" class="fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center z-50" style="display: none;">
+    <div class="bg-white p-8 rounded-lg shadow-lg max-w-sm w-full">
+        <h2 class="text-2xl font-bold text-center mb-6">লগইন করুন</h2>
+        <form id="login-form">
+            <div class="mb-4">
+                <label for="username" class="block text-gray-700 mb-2">ইউজারনেম</label>
+                <input type="text" id="username" class="w-full p-3 border rounded-md" required>
+            </div>
+            <div class="mb-6">
+                <label for="password" class="block text-gray-700 mb-2">পাসওয়ার্ড</label>
+                <input type="password" id="password" class="w-full p-3 border rounded-md" required>
+            </div>
+            <button type="submit" class="w-full bg-blue-600 text-white p-3 rounded-md hover:bg-blue-700 font-bold">লগইন</button>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // --- Authentication ---
+    const loginScreen = document.getElementById('login-screen');
+    const loginForm = document.getElementById('login-form');
+    const mainContent = document.querySelector('.main-content');
+    const sidebar = document.getElementById('sidebar');
+
+    // Set your default credentials here
+    const AUTH_USER = 'admin';
+    const AUTH_PASS = '1234';
+
+    function isLoggedIn() {
+        return localStorage.getItem('samity_logged_in') === 'true';
+    }
+
+    function showLogin() {
+        loginScreen.style.display = 'flex';
+        mainContent.style.display = 'none';
+        sidebar.style.display = 'none';
+    }
+
+    function hideLogin() {
+        loginScreen.style.display = 'none';
+        mainContent.style.display = '';
+        sidebar.style.display = '';
+    }
+
+    if (!isLoggedIn()) {
+        showLogin();
+    } else {
+        hideLogin();
+    }
+
+    loginForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value.trim();
+        if (username === AUTH_USER && password === AUTH_PASS) {
+            localStorage.setItem('samity_logged_in', 'true');
+            hideLogin();
+            location.reload();
+        } else {
+            Swal.fire('ভুল!', 'ইউজারনেম বা পাসওয়ার্ড ভুল!', 'error');
+        }
+    });
+
+    // Optional: Add a logout button in sidebar
+    const logoutBtn = document.createElement('button');
+    logoutBtn.textContent = 'লগআউট';
+    logoutBtn.className = 'bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded mt-4 w-full';
+    logoutBtn.onclick = function() {
+        localStorage.removeItem('samity_logged_in');
+        location.reload();
+    };
+    sidebar.appendChild(logoutBtn);
+
+    // State
+    let members = [];
+    let transactions = [];
+    
+    // UI Elements
+    const views = document.querySelectorAll('.view');
+    const navLinks = document.querySelectorAll('.nav-link');
+    const viewTitle = document.getElementById('view-title');
+    const loader = document.getElementById('loader-container');
+
+    const totalMembersEl = document.getElementById('total-members');
+    const currentMonthCollectionEl = document.getElementById('current-month-collection');
+    const totalCollectionEl = document.getElementById('total-collection');
+    const monthlySummaryTable = document.getElementById('monthly-summary-table');
+
+    const addMemberForm = document.getElementById('add-member-form');
+    const memberNameInput = document.getElementById('member-name');
+    const memberSerialInput = document.getElementById('member-serial');
+    const membersTable = document.getElementById('members-table');
+
+    const addTransactionForm = document.getElementById('add-transaction-form');
+    const transactionMemberSelect = document.getElementById('transaction-member');
+    const transactionMonthSelect = document.getElementById('transaction-month');
+    const transactionYearInput = document.getElementById('transaction-year');
+    const transactionAmountInput = document.getElementById('transaction-amount');
+    
+    const transactionsTable = document.getElementById('transactions-table');
+    const searchTransactionInput = document.getElementById('search-transaction');
+
+    const backupBtn = document.getElementById('backup-data');
+    const restoreInput = document.getElementById('restore-data');
+    const exportCsvBtn = document.getElementById('export-csv');
+    const currentDateEl = document.getElementById('current-date');
+
+    // English Months & Date functionality
+    const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    
+    function setEnglishDate() {
+        const now = new Date();
+        const options = { year: 'numeric', month: 'long', day: 'numeric' };
+        let dateStr = now.toLocaleDateString('en-GB', options);
+        currentDateEl.textContent = `Today: ${dateStr}`;
+    }
+
+    // --- Main Logic ---
+    function init() {
+        showLoader();
+        setEnglishDate();
+        loadData();
+        populateMonthAndYear();
+        renderAll();
+        switchView('dashboard');
+        hideLoader();
+    }
+
+    function showLoader() { loader.classList.remove('hidden'); }
+    function hideLoader() { loader.classList.add('hidden'); }
+    
+    function switchView(viewName) {
+        views.forEach(v => v.classList.add('hidden'));
+        document.getElementById(`${viewName}-view`).classList.remove('hidden');
+        
+        const activeLink = document.querySelector(`.nav-link[data-view="${viewName}"]`);
+        navLinks.forEach(link => link.classList.remove('bg-slate-700', 'font-bold'));
+        if(activeLink) {
+            activeLink.classList.add('bg-slate-700', 'font-bold');
+            viewTitle.textContent = activeLink.textContent;
+        }
+    }
+    
+    navLinks.forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            const viewName = e.currentTarget.getAttribute('data-view');
+            switchView(viewName);
+        });
+    });
+
+    function renderAll() {
+        renderDashboard();
+        renderMembers();
+        renderTransactions();
+        populateMemberDropdown();
+    }
+    
+    // --- Data Persistence ---
+    function saveData() {
+        try {
+            localStorage.setItem('samityMembers', JSON.stringify(members));
+            localStorage.setItem('samityTransactions', JSON.stringify(transactions));
+        } catch (e) {
+            console.error("Error saving data to localStorage", e);
+            Swal.fire('ত্রুটি!', 'ডেটা সংরক্ষণ করা সম্ভব হচ্ছে না। আপনার ব্রাউজারের স্টোরেজ ভর্তি থাকতে পারে।', 'error');
+        }
+    }
+
+    function loadData() {
+        const storedMembers = localStorage.getItem('samityMembers');
+        const storedTransactions = localStorage.getItem('samityTransactions');
+        members = storedMembers ? JSON.parse(storedMembers) : [];
+        transactions = storedTransactions ? JSON.parse(storedTransactions) : [];
+    }
+
+    // --- Dashboard Logic ---
+    function renderDashboard() {
+        totalMembersEl.textContent = members.length;
+
+        const now = new Date();
+        const currentMonthName = months[now.getMonth()];
+        const currentYear = now.getFullYear();
+
+        const currentMonthCollections = transactions.filter(t => {
+             return t.month === currentMonthName && t.year === currentYear;
+        }).reduce((sum, t) => sum + t.amount, 0);
+        
+        currentMonthCollectionEl.textContent = `৳${currentMonthCollections.toLocaleString('en-IN')}`;
+
+        const totalCollection = transactions.reduce((sum, t) => sum + t.amount, 0);
+        totalCollectionEl.textContent = `৳${totalCollection.toLocaleString('en-IN')}`;
+
+        // Monthly Summary
+        const summary = transactions.reduce((acc, t) => {
+            const key = `${t.month}-${t.year}`;
+            if(!acc[key]) {
+                acc[key] = { month: t.month, year: t.year, total: 0 };
+            }
+            acc[key].total += t.amount;
+            return acc;
+        }, {});
+        
+        monthlySummaryTable.innerHTML = Object.values(summary)
+            .sort((a,b) => new Date(`1 ${b.month} ${b.year}`) - new Date(`1 ${a.month} ${a.year}`))
+            .map(s => `
+                <tr class="border-b">
+                    <td class="p-3">${s.month}</td>
+                    <td class="p-3">${s.year}</td>
+                    <td class="p-3 text-right">${s.total.toLocaleString('en-IN')}</td>
+                </tr>
+            `).join('');
+    }
+
+    // --- Member Logic ---
+    addMemberForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const name = memberNameInput.value.trim();
+        const serial = memberSerialInput.value.trim();
+        
+        if (name) {
+            const newMember = {
+                id: Date.now(),
+                name: name,
+                serial: serial
+            };
+            members.push(newMember);
+            saveData();
+            renderMembers();
+            populateMemberDropdown();
+            addMemberForm.reset();
+            Swal.fire('সফল!', 'নতুন সদস্য যোগ করা হয়েছে।', 'success');
+        }
+    });
+
+    function renderMembers() {
+        membersTable.innerHTML = members.map(member => `
+            <tr class="border-b hover:bg-gray-50">
+                <td class="p-3">${member.serial}</td>
+                <td class="p-3">${member.name}</td>
+                <td class="p-3 text-center">
+                    <button class="text-red-500 hover:text-red-700 delete-member-btn" data-id="${member.id}">মুছুন</button>
+                </td>
+            </tr>
+        `).join('');
+    }
+    
+    membersTable.addEventListener('click', (e) => {
+        if(e.target.classList.contains('delete-member-btn')) {
+            const memberId = parseInt(e.target.dataset.id);
+            Swal.fire({
+                title: 'আপনি কি নিশ্চিত?',
+                text: "এই সদস্যকে মুছে ফেলা হলে তার সকল লেনদেনও মুছে যাবে!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'হ্যাঁ, মুছুন!',
+                cancelButtonText: 'না'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    members = members.filter(m => m.id !== memberId);
+                    transactions = transactions.filter(t => t.memberId !== memberId);
+                    saveData();
+                    renderAll();
+                    Swal.fire('মুছে ফেলা হয়েছে!', 'সদস্য এবং তার লেনদেন মুছে ফেলা হয়েছে।', 'success');
+                }
+            })
+        }
+    });
+    
+    function populateMemberDropdown() {
+        transactionMemberSelect.innerHTML = '<option value="">-- সদস্য নির্বাচন করুন --</option>' + members.map(m => `
+            <option value="${m.id}">${m.serial} - ${m.name}</option>
+        `).join('');
+    }
+
+    // --- Transaction Logic ---
+    function populateMonthAndYear() {
+        const now = new Date();
+        transactionMonthSelect.innerHTML = months.map((m, i) => `<option value="${m}" ${i === now.getMonth() ? 'selected' : ''}>${m}</option>`).join('');
+        transactionYearInput.value = now.getFullYear();
+    }
+
+    addTransactionForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const memberId = parseInt(transactionMemberSelect.value);
+        const month = transactionMonthSelect.value;
+        const year = parseInt(transactionYearInput.value);
+        const amount = parseFloat(transactionAmountInput.value);
+
+        if(memberId && month && year && amount >= 0) {
+            const newTransaction = {
+                id: Date.now(),
+                date: new Date().toISOString(),
+                memberId: memberId,
+                month: month,
+                year: year,
+                amount: amount
+            };
+            transactions.unshift(newTransaction);
+            saveData();
+            renderTransactions();
+            renderDashboard();
+            addTransactionForm.reset();
+            populateMonthAndYear(); // Reset month/year to current after submission
+            Swal.fire('সফল!', 'নতুন জমা যোগ করা হয়েছে।', 'success');
+            switchView('transactions');
+        } else {
+            Swal.fire('ত্রুটি!', 'অনুগ্রহ করে সকল তথ্য সঠিকভাবে পূরণ করুন।', 'error');
+        }
+    });
+
+    function renderTransactions(filter = '') {
+        const filteredTransactions = transactions.filter(t => {
+            const member = members.find(m => m.id === t.memberId);
+            return member && member.name.toLowerCase().includes(filter.toLowerCase());
+        });
+
+        transactionsTable.innerHTML = filteredTransactions.map(t => {
+            const member = members.find(m => m.id === t.memberId);
+            const transactionDate = new Date(t.date);
+            const formattedDate = transactionDate.toLocaleDateString('en-GB');
+
+            return `
+            <tr class="border-b hover:bg-gray-50">
+                <td class="p-3">${formattedDate}</td>
+                <td class="p-3">${member ? member.name : 'অজানা সদস্য'}</td>
+                <td class="p-3">${t.month}</td>
+                <td class="p-3">${t.year}</td>
+                <td class="p-3 text-right">${t.amount.toLocaleString('en-IN')}</td>
+                <td class="p-3 text-center">
+                    <button class="text-red-500 hover:text-red-700 delete-transaction-btn" data-id="${t.id}">মুছুন</button>
+                </td>
+            </tr>
+            `;
+        }).join('');
+    }
+    
+    transactionsTable.addEventListener('click', (e) => {
+        if(e.target.classList.contains('delete-transaction-btn')) {
+            const transactionId = parseInt(e.target.dataset.id);
+            Swal.fire({
+                title: 'আপনি কি নিশ্চিত?',
+                text: "এই জমার হিসাবটি মুছে ফেলতে চান?",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'হ্যাঁ, মুছুন!',
+                cancelButtonText: 'না'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    transactions = transactions.filter(t => t.id !== transactionId);
+                    saveData();
+                    renderTransactions();
+                    renderDashboard();
+                    Swal.fire('মুছে ফেলা হয়েছে!', 'জমার হিসাব মুছে ফেলা হয়েছে।', 'success');
+                }
+            })
+        }
+    });
+    
+    searchTransactionInput.addEventListener('input', (e) => {
+        renderTransactions(e.target.value);
+    });
+
+    // --- Backup & Restore ---
+    backupBtn.addEventListener('click', () => {
+        const data = {
+            members: members,
+            transactions: transactions,
+            backupDate: new Date().toISOString()
+        };
+        const dataStr = JSON.stringify(data, null, 2);
+        const dataBlob = new Blob([dataStr], {type: "application/json"});
+        const url = URL.createObjectURL(dataBlob);
+        const a = document.createElement('a');
+        a.href = url;
+        const date = new Date().toISOString().slice(0, 10);
+        a.download = `samity_backup_${date}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        Swal.fire('সফল!', 'ডেটা ব্যাকআপ ফাইল ডাউনলোড করা হয়েছে।', 'success');
+    });
+
+    restoreInput.addEventListener('change', (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const data = JSON.parse(e.target.result);
+                if (data.members && data.transactions) {
+                     Swal.fire({
+                        title: 'আপনি কি নিশ্চিত?',
+                        text: "এটি করলে বর্তমান সকল ডেটা মুছে নতুন ডেটা যোগ হবে!",
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonText: 'হ্যাঁ, পুনরুদ্ধার করুন!',
+                        cancelButtonText: 'না'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            showLoader();
+                            members = data.members;
+                            transactions = data.transactions;
+                            saveData();
+                            renderAll();
+                            hideLoader();
+                            Swal.fire('সফল!', 'ডেটা সফলভাবে পুনরুদ্ধার করা হয়েছে।', 'success');
+                        }
+                    });
+                } else {
+                    throw new Error("Invalid backup file format");
+                }
+            } catch (error) {
+                 Swal.fire('ব্যর্থ!', 'ভুল ফাইল ফরম্যাট। অনুগ্রহ করে সঠিক ব্যাকআপ ফাইল নির্বাচন করুন।', 'error');
+            } finally {
+                // Reset file input so the same file can be selected again
+                restoreInput.value = "";
+            }
+        };
+        reader.readAsText(file);
+    });
+    
+    // --- CSV Export ---
+    exportCsvBtn.addEventListener('click', () => {
+        let csvContent = "data:text/csv;charset=utf-8,";
+        csvContent += "Serial No,Name,Month,Year,Amount\n";
+        
+        const dataToExport = transactions.map(t => {
+            const member = members.find(m => m.id === t.memberId) || { serial: 'N/A', name: 'Unknown' };
+            return {
+                serial: member.serial,
+                name: `"${member.name}"`,
+                month: t.month,
+                year: t.year,
+                amount: t.amount
+            };
+        });
+
+        dataToExport.forEach(row => {
+            let rowArray = [row.serial, row.name, row.month, row.year, row.amount];
+            csvContent += rowArray.join(",") + "\n";
+        });
+
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        const date = new Date().toISOString().slice(0, 10);
+        link.setAttribute("download", `samity_transactions_${date}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        Swal.fire('সফল!', 'CSV ফাইল ডাউনলোড করা হয়েছে।', 'success');
+    });
+
+    // Start the application
+    init();
+});
+</script>
+</body>
+</html>
+
